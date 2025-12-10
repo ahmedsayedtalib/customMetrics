@@ -1,0 +1,4 @@
+Django
+psutil
+prometheus-client
+gunicorn

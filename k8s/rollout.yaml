@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: custom-metrics-rollout
+spec:
+  replicas: 2
+  strategy:
+    canary:
+      steps:
+        - setWeight: 10
+        - pause: { duration: 20s }
+        - setWeight: 50
+        - pause: { duration: 20s }
+        - setWeight: 100
+  selector:
+    matchLabels:
+      app: custom-metrics
+  template:
+    metadata:
+      labels:
+        app: custom-metrics
+    spec:
+      containers:
+        - name: custom-metrics
+          image: ahmedsayedtalib/custommetrics:latest
+          ports:
+            - containerPort: 8000
