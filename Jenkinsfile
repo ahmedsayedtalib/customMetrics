@@ -30,8 +30,7 @@ pipeline {
                 script {
                     try {
                         sh """
-                        export PYTHONPATH=$WORKSPACE
-                        pytest -v metrics/tests/root_urls.py \
+                        PYTHONPATH=${WORKSPACE} pytest -v metrics/tests/root_urls.py \
                         metrics/tests/url_routing.py metrics/tests/settings_test.py \
                         metrics/tests/test_metrics.py
                         """
