@@ -30,10 +30,9 @@ pipeline {
                 script {
                     try {
                         sh """
-                        PYTHONPATH=${WORKSPACE} pytest -v metrics/tests/root_urls.py \
-                        metrics/tests/url_routing.py metrics/tests/settings_test.py \
-                        metrics/tests/test_metrics.py
+                        PYTHONPATH=${WORKSPACE} pytest -v metrics/tests/
                         """
+                        }
                     } catch (Exception e) {
                         echo "❌ Pytest execution failed: ${e}"
                         currentBuild.result = 'FAILURE'
