@@ -34,7 +34,6 @@ pipeline {
                         metrics/tests/url_routing.py metrics/tests/root_urls.py \
                         metrics/tests/test_metrics.py
                         """
-                        }
                     } catch (Exception e) {
                         echo "❌ Pytest execution failed: ${e}"
                         currentBuild.result = 'FAILURE'
