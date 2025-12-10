@@ -17,7 +17,7 @@ pipeline {
     stages {
         stage("Checkout") {
             steps {
-                git scm
+                git branch: 'main',credentialsId: GITHUB_CRED, url: GITHUB_URL
             }
             post {
                 success { echo "✅ Git checkout completed successfully" }
