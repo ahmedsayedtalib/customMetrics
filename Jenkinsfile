@@ -30,7 +30,9 @@ pipeline {
                 script {
                     try {
                         sh """
-                        PYTHONPATH=${WORKSPACE} pytest -v metrics/tests/
+                        PYTHONPATH=${WORKSPACE} pytest -v metrics/tests/settings_test.py \
+                        metrics/tests/url_routing.py metrics/tests/root_urls.py \
+                        metrics/tests/test_metrics.py
                         """
                         }
                     } catch (Exception e) {
