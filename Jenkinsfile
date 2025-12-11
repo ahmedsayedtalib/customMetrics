@@ -50,7 +50,7 @@ pipeline {
                 script {
                     try {
                         sh """
-                        export PYTHONPATH=\$PYTHONPATH:$(pwd)
+                        export PYTHONPATH= $PYTHONPATH:$(pwd)
                         export DJANGO_SETTINGS_MODULE=metrics.settings
                         ./venv/bin/pytest -v metrics/tests/settings_test.py \
                         metrics/tests/url_routing.py metrics/tests/root_urls.py \
