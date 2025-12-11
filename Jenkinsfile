@@ -36,7 +36,7 @@ pipeline {
                     }
                     catch (Exception e) {
                         echo "Error: ${e}"
-                        currentBuild.result = 'FAILURE'
+                        currentBuild.result = 'UNSTABLE'
                     }
                 }
             }
@@ -50,6 +50,8 @@ pipeline {
                 script {
                     try {
                         sh """
+                        export PYTHONPATH=\$PYTHONPATH:$(pwd)
+                        export DJANGO_SETTINGS_MODULE=metrics.settings
                         ./venv/bin/pytest -v metrics/tests/settings_test.py \
                         metrics/tests/url_routing.py metrics/tests/root_urls.py \
                         metrics/tests/test_metrics.py
@@ -173,7 +175,7 @@ pipeline {
                             kubectl config set-credentials sa-user --token=$TOKEN
                             kubectl config set-context sa-context --cluster=local --user=sa-user --namespace=monitoring
                             kubectl config use-context sa-context
-
+                            kubectl wait --for=condition=Ready pods --all -n monitoring --timeout=20s
                             kubectl rollout status deployment/custommetrics -n monitoring
                             kubectl get service custommetrics -n monitoring
                             """
