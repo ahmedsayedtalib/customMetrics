@@ -2,3 +2,5 @@ Django
 psutil
 prometheus-client
 gunicorn
+locust 
+pytest

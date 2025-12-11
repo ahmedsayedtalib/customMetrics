@@ -12,6 +12,7 @@ pipeline {
         ARGOCD_URL      = "http://192.168.103.2:32200"
         ARGOCD_CRED     = "argocd-cred"
         KUBERNETES_CRED = "kubernetes-cred"
+        PYTHON_VENV     = "source venv/bin/activate"
     }
 
     stages {
@@ -24,13 +25,36 @@ pipeline {
                 failure { echo "❌ Git checkout failed" }
             }
         }
-
+        stage ("Installing Test Tools") {
+            steps {
+                script {
+                    try {
+                    sh """
+                    sudo apt update && sudo apt install -y python3
+                    python3 -m venv venv
+                    ${PYTHON_VENV}
+                    pip install --upgrade pip
+                    pip install -r requirements.txt
+                    """
+                    }
+                    catch (Exception e) {
+                        echo "Error: ${e}"
+                        currentBuild.result = 'FAILURE'
+                    }
+                }
+                post {
+                    success { echo "✅ Testing tools installed successfuly" }
+                    failure { echo "❌ Testing tools installation failed" }
+                }
+            }
+        }
         stage("Unit Test") {
             steps {
                 script {
                     try {
                         sh """
-                        PYTHONPATH=${WORKSPACE} pytest -v metrics/tests/settings_test.py \
+                        ${PYTHON_VENV}
+                        PYTHONPATH=$PWD pytest -v metrics/tests/settings_test.py \
                         metrics/tests/url_routing.py metrics/tests/root_urls.py \
                         metrics/tests/test_metrics.py
                         """
@@ -176,6 +200,7 @@ pipeline {
                 script {
                     try {
                         sh """
+                        ${PYTHON_VENV}
                         locust -f locust.py --headless -u 100 -r 10 --run-time 1m
                         """
                     } catch (Exception e) {
