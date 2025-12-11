@@ -12,7 +12,6 @@ pipeline {
         ARGOCD_URL      = "http://192.168.103.2:32200"
         ARGOCD_CRED     = "argocd-cred"
         KUBERNETES_CRED = "kubernetes-cred"
-        PYTHON_VENV     = "source venv/bin/activate"
     }
 
     stages {
@@ -30,11 +29,9 @@ pipeline {
                 script {
                     try {
                     sh """
-                    sudo apt update && sudo apt install -y python3
                     python3 -m venv venv
-                    ${PYTHON_VENV}
-                    pip install --upgrade pip
-                    pip install -r requirements.txt
+                    ./venv/bin/pip install --upgrade pip
+                    ./venv/bin/pip install -r requirements.txt
                     """
                     }
                     catch (Exception e) {
@@ -42,19 +39,18 @@ pipeline {
                         currentBuild.result = 'FAILURE'
                     }
                 }
-                post {
+            }
+            post {
                     success { echo "✅ Testing tools installed successfuly" }
                     failure { echo "❌ Testing tools installation failed" }
                 }
-            }
         }
         stage("Unit Test") {
             steps {
                 script {
                     try {
                         sh """
-                        ${PYTHON_VENV}
-                        PYTHONPATH=$PWD pytest -v metrics/tests/settings_test.py \
+                        ./venv/bin/pytest -v metrics/tests/settings_test.py \
                         metrics/tests/url_routing.py metrics/tests/root_urls.py \
                         metrics/tests/test_metrics.py
                         """
@@ -125,12 +121,11 @@ pipeline {
         stage("Update Kubernetes Manifest") {
             steps {
                 script {
-                    env.IMAGE_TAG = "${env.BUILD_NUMBER}"
-                    sh "sed -i 's|image:.*|image:${DOCKER_REPO}/${DOCKER_IMAGE}:${IMAGE_TAG}' k8s/rollout.yaml"
+                    sh "sed -i 's|image:.*|image:${DOCKER_REPO}/${DOCKER_IMAGE}:${env.BUILD_NUMBER}' k8s/rollout.yaml"
                 }
             }
             post {
-                success { echo "✅ Kubernetes manifest updated with image tag ${env.IMAGE_TAG}" }
+                success { echo "✅ Kubernetes manifest updated with image tag ${env.BUILD_NUMBER}" }
                 failure { echo "❌ Failed to update Kubernetes manifest" }
             }
         }
@@ -144,7 +139,7 @@ pipeline {
                             git config --global user.email 'Jenkins@cicd-automate.com'
                             git config --global user.name 'Jenkins CI/CD Automation'
                             git add k8s/rollout.yaml
-                            git commit -m 'feat(ci):Update Image tag number to ${IMAGE_TAG} [skip ci]' || echo "No changes to commit"
+                            git commit -m 'feat(ci):Update Image tag number to ${env.BUILD_NUMBER} [skip ci]' || echo "No changes to commit"
                             git push https://\${GITHUB_USER}:\${GITHUB_TOKEN}@github.com/ahmedsayedtalib/customMetrics.git HEAD:main
                             """
                         }
@@ -200,8 +195,7 @@ pipeline {
                 script {
                     try {
                         sh """
-                        ${PYTHON_VENV}
-                        locust -f locust.py --headless -u 100 -r 10 --run-time 1m
+                        ./venv/bin/locust -f locust.py --headless -u 100 -r 10 --run-time 1m
                         """
                     } catch (Exception e) {
                         echo "❌ Locust load test failed: ${e}"
