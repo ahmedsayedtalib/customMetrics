@@ -50,11 +50,12 @@ pipeline {
                 script {
                     try {
                         sh """
-                        export PYTHONPATH= $PYTHONPATH:$(pwd)
+                        export PYTHONPATH=$(pwd)
                         export DJANGO_SETTINGS_MODULE=metrics.settings
                         ./venv/bin/pytest -v metrics/tests/settings_test.py \
                         metrics/tests/url_routing.py metrics/tests/root_urls.py \
                         metrics/tests/test_metrics.py
+
                         """
                     } catch (Exception e) {
                         echo "❌ Pytest execution failed: ${e}"
