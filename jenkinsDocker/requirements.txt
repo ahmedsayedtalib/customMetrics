@@ -1,3 +1,4 @@
+prometheus_client
 django
 pytest
 locust
