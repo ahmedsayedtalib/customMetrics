@@ -82,7 +82,6 @@ pipeline {
 
         stage("Build & Push Docker Image") {
             steps {
-                dir('jenkinsDocker') {
                     withCredentials([
                         usernamePassword(
                             credentialsId: DOCKER_CRED,
