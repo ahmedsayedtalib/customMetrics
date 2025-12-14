@@ -96,7 +96,6 @@ pipeline {
                         """
                     }
                 }
-            }
             post {
                 success { echo "✅ Docker image built and pushed: ${IMAGE_TAG}" }
                 failure { error "❌ Docker build/push failed" }
