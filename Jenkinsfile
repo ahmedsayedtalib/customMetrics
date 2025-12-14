@@ -37,7 +37,8 @@ pipeline {
 
         stage("Unit Tests") {
             agent {
-                docker { image "python:3.12" }
+                docker { image "python:3.12"
+                args "-u root" }
             }
             steps {
                 dir('jenkinsDocker') {
@@ -175,7 +176,9 @@ pipeline {
 
         stage("Load Testing (Optional)") {
             agent {
-                docker { image "python:3.12" }
+                docker { image "python:3.12"
+                args "-u root" 
+                }
             }
             steps {
                 sh """
