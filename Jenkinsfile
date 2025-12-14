@@ -116,20 +116,27 @@ pipeline {
 
         stage("Push Manifest to GitHub") {
             steps {
+                script {
+                    withCredentials([usernamePassword(
+                        credentialsId: GITHUB_CRED,
+                        usernameVariable: "USER",
+                        passwordVariable: "PASSWORD"
+                    )]) {
                 sh """
                     git config user.email "jenkins@example.com"
                     git config user.name  "Jenkins CI/CD Automation"
                     git add k8s/rollout.yaml
                     git commit -m "ci: update image tag to ${IMAGE_TAG} [skip ci]" || echo "No changes"
-                    git push origin main
+                    git push https://${USER}:${PASSWORD}@github.com/${DOCKER_REPO}/customMetrics.git
                 """
-            }
+                       }
+                    }
             post {
                 success { echo "✅ Manifest pushed to GitHub" }
                 failure { echo "⚠️ Failed to push manifest (manual intervention may be required)" }
+                }
             }
         }
-
         stage("ArgoCD Sync & Deploy") {
             steps {
                 withCredentials([
