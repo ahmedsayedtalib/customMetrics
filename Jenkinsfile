@@ -44,7 +44,7 @@ pipeline {
                 dir('jenkinsDocker') {
                     sh """
                         pip install --no-cache-dir -r requirements.txt
-                        pytest ../metrics/tests/ --maxfail=1 -v
+                        pytest ../metrics/tests/* --maxfail=1 -v
                     """
                 }
             }
