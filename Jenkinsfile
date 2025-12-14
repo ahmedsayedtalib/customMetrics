@@ -127,7 +127,7 @@ pipeline {
                     git config user.name  "Jenkins CI/CD Automation"
                     git add k8s/rollout.yaml
                     git commit -m "ci: update image tag to ${IMAGE_TAG} [skip ci]" || echo "No changes"
-                    git push https://${USER}:${PASSWORD}@github.com/${DOCKER_REPO}/customMetrics.git
+                    git push https://${USER}:${PASSWORD}@github.com/${DOCKER_REPO}/customMetrics.git main
                 """
                        }
                     }
