@@ -12,6 +12,8 @@ pipeline {
         SONAR_CRED      = "sonarqube-cred"
         SONAR_URL       = "http://192.168.103.2:32000"
 
+        KUBERNETES_CRED = "kubernetes-cred"
+
         ARGOCD_CRED     = "argocd-cred"
         ARGOCD_URL      = "https://192.168.103.2:32300"
         ARGOCD_ADDRESS  = "192.168.103.2:32300"
@@ -156,13 +158,9 @@ pipeline {
                 ]) {
                     try {
                     sh """
-                        kubectl config use-context minikube
                         argocd login ${ARGOCD_ADDRESS} --username ${ARGO_USER} --password ${ARGO_PASS} --insecure
                         argocd app sync custommetrics --prune
                         argocd app wait custommetrics --health --timeout 180
-                        echo "Verifying Deployment:"
-                        kubectl rollout status deployment/${K8S_DEPLOYMENT} -n ${K8S_NAMESPACE} --timeout=2m
-                        kubectl get pods -n ${K8S_NAMESPACE}
                     """
                     }
                     catch (Exception e) {
@@ -181,6 +179,30 @@ pipeline {
                 }
             }
         }
+        stage("Verify Deployment") {
+    steps {
+        script {
+            withCredentials([file(credentialsId: 'kubernetes-cred', variable: 'KUBECONFIG_FILE')]) {
+                try {
+                sh """
+                    export KUBECONFIG=${KUBECONFIG_FILE}
+                    kubectl rollout status deployment/${K8S_DEPLOYMENT} -n ${K8S_NAMESPACE} --timeout=2m
+                    kubectl get pods -n ${K8S_NAMESPACE}
+                """
+                }
+                catch (Exception e) {
+                    echo "Error connecting to the cluster: ${e.getMessage()}"
+                    currentBuild.result = 'UNSTABLE'
+                }
+            }
+        }
+    }
+    post {
+        success { echo "✅ Verifying the rollout from Kubernetes was successful" }
+        failure { echo "⚠️ Could Not Verify rollout status. Please check via kubectl command" }
+    }
+}
+
 
        stage("Load Testing") {
     agent {

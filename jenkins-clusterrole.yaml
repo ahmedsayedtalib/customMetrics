@@ -3,6 +3,31 @@ kind: ClusterRole
 metadata:
   name: jenkins-clusterrole
 rules:
-  - apiGroups: ["","apps","batch"]
-    resources: ["secrets","deployments","services"]
-    verbs: ["get","list","create","update","delete"]
+- apiGroups: [""]
+  resources:
+  - pods
+  - pods/log
+  - services
+  - configmaps
+  - secrets
+  - events
+  - namespaces
+  verbs: ["get","list","watch","create","update","patch","delete"]
+
+- apiGroups: ["apps"]
+  resources:
+  - deployments
+  - replicasets
+  verbs: ["get","list","watch","create","update","patch","delete"]
+
+- apiGroups: ["batch"]
+  resources:
+  - jobs
+  - cronjobs
+  verbs: ["get","list","watch","create","update","patch","delete"]
+
+- apiGroups: ["networking.k8s.io"]
+  resources:
+  - ingresses
+  verbs: ["get","list","watch","create","update","patch","delete"]
+
