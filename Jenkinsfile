@@ -145,6 +145,7 @@ pipeline {
         }
         stage("ArgoCD Sync & Deploy") {
             steps {
+                script {
                 withCredentials([
                     usernamePassword(
                         credentialsId: ARGOCD_CRED,
@@ -164,6 +165,7 @@ pipeline {
                     catch (Exception e) {
                         echo "Rollout Deployment Failed: ${e.getMessage()}"
                         currentBuild.result = 'UNSTABLE'
+                        }
                     }
                 }
             }
@@ -179,7 +181,10 @@ pipeline {
 
        stage("Load Testing") {
     agent {
-        docker { image "python:3.12" args "-u root" }
+        docker { 
+            image "python:3.12"
+            args "-u root" 
+        }
     }
     steps {
         script {
