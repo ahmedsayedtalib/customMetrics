@@ -160,7 +160,7 @@ pipeline {
                     sh """
                         argocd login ${ARGOCD_ADDRESS} --username ${ARGO_USER} --password ${ARGO_PASS} --insecure
                         argocd app sync custommetrics --prune
-                        argocd app wait custommetrics --health --timeout 180
+                        argocd app wait custommetrics --health --timeout 600
                     """
                     }
                     catch (Exception e) {
