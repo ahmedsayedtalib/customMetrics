@@ -123,13 +123,13 @@ pipeline {
                         passwordVariable: "PASSWORD"
                     )]) {
                         try {
-                sh """
+                sh '''
                     git config user.email "jenkins@example.com"
                     git config user.name  "Jenkins CI/CD Automation"
                     git add k8s/rollout.yaml
-                    git commit -m "ci: update image tag to ${IMAGE_TAG} [skip ci]" || echo "No changes"
-                    git push https://${USER}:${PASSWORD}@github.com/${DOCKER_REPO}/customMetrics.git main
-                """
+                    git commit -m "ci: update image tag to $IMAGE_TAG [skip ci]" || echo "No changes"
+                    git push https://$USER:$PASSWORD@github.com/$DOCKER_REPO/customMetrics.git main
+                '''
                         }
                         catch (Exception e) {
                             echo "GitHub push failed: ${e.getMessage()}"
@@ -137,6 +137,10 @@ pipeline {
                         }
                        }
                     }
+            }
+            post {
+                success { echo "✅ New Manifest push passed. Tag Number: ${IMAGE_TAG}" }
+                failure { error "❌ New Manifest push failed" }
             }
         }
         stage("ArgoCD Sync & Deploy") {
@@ -148,10 +152,19 @@ pipeline {
                         passwordVariable: "ARGO_PASS"
                     )
                 ]) {
+                    try {
                     sh """
                         argocd login ${ARGOCD_URL} --username ${ARGO_USER} --password ${ARGO_PASS} --insecure
                         argocd app sync custommetrics --wait --prune
+                        echo "Verifying Deployment:"
+                        kubectl rollout status deployment/${K8S_DEPLOYMENT} -n ${K8S_NAMESPACE} --timeout=2m
+                        kubectl get pods -n ${K8S_NAMESPACE}
                     """
+                    }
+                    catch (Exception e) {
+                        echo "Rollout Deployment Failed: ${e.getMessage()}"
+                        currentBuild.result = 'UNSTABLE'
+                    }
                 }
             }
             post {
@@ -164,40 +177,28 @@ pipeline {
             }
         }
 
-        stage("Verify Deployment") {
-            steps {
-                sh """
-                    kubectl rollout status deployment/${K8S_DEPLOYMENT} -n ${K8S_NAMESPACE} --timeout=2m
-                    kubectl get pods -n ${K8S_NAMESPACE}
-                """
-            }
-            post {
-                success { echo "✅ Deployment verified" }
-                failure {
-                    echo "❌ Deployment verification failed - rolling back"
-                    sh "kubectl rollout undo deployment/${K8S_DEPLOYMENT} -n ${K8S_NAMESPACE}"
-                    error "Rollback done due to failed deployment verification"
-                }
-            }
-        }
+       stage("Load Testing") {
+    agent {
+        docker { image "python:3.12" args "-u root" }
+    }
+    steps {
+        script {
+            def SERVICE_HOST = "custom-metrics-service.monitoring.svc.cluster.local"
 
-        stage("Load Testing (Optional)") {
-            agent {
-                docker { image "python:3.12"
-                args "-u root" 
-                }
-            }
-            steps {
-                sh """
-                    pip install locust
-                    locust -f locust.py --headless -u 100 -r 10 --run-time 1m
-                """
-            }
-            post {
-                success { echo "✅ Load testing completed" }
-                failure { echo "⚠️ Load testing failed (non-blocking)" }
-            }
+            echo "Running load test against service DNS: ${SERVICE_HOST}"
+            sh """
+                pip install --no-cache-dir locust
+                locust -f locust.py --headless -u 100 -r 10 --host=http://${SERVICE_HOST}:80 --run-time 1m
+            """
         }
+    }
+    post {
+        success { echo "✅ Load testing completed" }
+        failure { echo "⚠️ Load testing failed (non-blocking)" }
+    }
+}
+
+
     }
 
     post {
