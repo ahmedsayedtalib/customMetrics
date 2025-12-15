@@ -160,12 +160,12 @@ pipeline {
                     sh """
                         argocd login ${ARGOCD_ADDRESS} --username ${ARGO_USER} --password ${ARGO_PASS} --insecure
                         argocd app sync custommetrics --prune
-                        argocd app wait custommetrics --health --timeout 600
+                        argocd app wait custommetrics --health --timeout 60
                     """
                     }
                     catch (Exception e) {
                         echo "Rollout Deployment Failed: ${e.getMessage()}"
-                        currentBuild.result = 'UNSTABLE'
+                        currentBuild.result = 'FAILURE'
                         }
                     }
                 }
@@ -184,11 +184,11 @@ pipeline {
         script {
             withCredentials([file(credentialsId: 'kubernetes-cred', variable: 'KUBECONFIG_FILE')]) {
                 try {
-                sh """
-                    export KUBECONFIG=${KUBECONFIG_FILE}
-                    kubectl rollout status deployment/${K8S_DEPLOYMENT} -n ${K8S_NAMESPACE} --timeout=2m
-                    kubectl get pods -n ${K8S_NAMESPACE}
-                """
+                sh '''
+                    export KUBECONFIG=$KUBECONFIG_FILE
+                    kubectl rollout status deployment/$K8S_DEPLOYMENT -n $K8S_NAMESPACE --timeout=2m
+                    kubectl get pods -n $K8S_NAMESPACE
+                '''
                 }
                 catch (Exception e) {
                     echo "Error connecting to the cluster: ${e.getMessage()}"
@@ -213,7 +213,7 @@ pipeline {
     }
     steps {
         script {
-            def SERVICE_HOST = "custom-metrics-service.monitoring.svc.cluster.local"
+            def SERVICE_HOST = sh(script: 'kubectl get svc custom-metrics-service -n monitoring -o jsonpath="{.spec.clusterIP}"', returnStdout: true).trim()
 
             echo "Running load test against service DNS: ${SERVICE_HOST}"
             sh """
