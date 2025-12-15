@@ -13,7 +13,8 @@ pipeline {
         SONAR_URL       = "http://192.168.103.2:32000"
 
         ARGOCD_CRED     = "argocd-cred"
-        ARGOCD_URL      = "http://192.168.103.2:32300"
+        ARGOCD_URL      = "https://192.168.103.2:32300"
+        ARGOCD_ADDRESS  = "192.168.103.2:32300"
 
         IMAGE_TAG       = "${env.BUILD_NUMBER}"
 
@@ -155,7 +156,7 @@ pipeline {
                 ]) {
                     try {
                     sh """
-                        argocd login ${ARGOCD_URL} --username ${ARGO_USER} --password ${ARGO_PASS} --insecure
+                        argocd login ${ARGOCD_ADDRESS} --username ${ARGO_USER} --password ${ARGO_PASS} --insecure
                         argocd app sync custommetrics --wait --prune
                         echo "Verifying Deployment:"
                         kubectl rollout status deployment/${K8S_DEPLOYMENT} -n ${K8S_NAMESPACE} --timeout=2m
