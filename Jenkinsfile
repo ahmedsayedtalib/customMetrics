@@ -156,8 +156,10 @@ pipeline {
                 ]) {
                     try {
                     sh """
+                        kubectl config use-context minikube
                         argocd login ${ARGOCD_ADDRESS} --username ${ARGO_USER} --password ${ARGO_PASS} --insecure
                         argocd app sync custommetrics --prune
+                        argocd app wait custommetrics --health --timeout 180
                         echo "Verifying Deployment:"
                         kubectl rollout status deployment/${K8S_DEPLOYMENT} -n ${K8S_NAMESPACE} --timeout=2m
                         kubectl get pods -n ${K8S_NAMESPACE}
