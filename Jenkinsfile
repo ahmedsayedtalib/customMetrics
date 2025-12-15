@@ -13,7 +13,7 @@ pipeline {
         SONAR_URL       = "http://192.168.103.2:32000"
 
         ARGOCD_CRED     = "argocd-cred"
-        ARGOCD_URL      = "http://192.168.103.2:32200"
+        ARGOCD_URL      = "http://192.168.103.2:32300"
 
         IMAGE_TAG       = "${env.BUILD_NUMBER}"
 
