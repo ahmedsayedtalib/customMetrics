@@ -137,10 +137,6 @@ pipeline {
                         }
                        }
                     }
-            post {
-                success { echo "✅ Manifest pushed to GitHub" }
-                failure { echo "⚠️ Failed to push manifest (manual intervention may be required)" }
-                }
             }
         }
         stage("ArgoCD Sync & Deploy") {
