@@ -160,11 +160,12 @@ pipeline {
                     sh """
                         argocd login ${ARGOCD_ADDRESS} --username ${ARGO_USER} --password ${ARGO_PASS} --insecure
                         argocd app sync custommetrics --prune
-                        argocd app wait custommetrics --health --timeout 60
+                        argocd app wait custommetrics --sync --timeout 300
                     """
                     }
                     catch (Exception e) {
                         echo "Rollout Deployment Failed: ${e.getMessage()}"
+                        throw e
                         currentBuild.result = 'FAILURE'
                         }
                     }
@@ -174,7 +175,7 @@ pipeline {
                 success { echo "✅ ArgoCD sync succeeded" }
                 failure {
                     echo "❌ ArgoCD sync failed - rolling back deployment"
-                    sh "kubectl rollout undo deployment/${K8S_DEPLOYMENT} -n ${K8S_NAMESPACE}"
+                    sh "argocd app rollback custommetrics"
                     error "Deployment rollback executed"
                 }
             }
@@ -186,7 +187,7 @@ pipeline {
                 try {
                 sh '''
                     export KUBECONFIG=$KUBECONFIG_FILE
-                    kubectl rollout status deployment/$K8S_DEPLOYMENT -n $K8S_NAMESPACE --timeout=2m
+                    kubectl argo rollouts status custom-metrics-rollout -n monitoring --timeout 2m
                     kubectl get pods -n $K8S_NAMESPACE
                 '''
                 }
