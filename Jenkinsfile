@@ -186,14 +186,16 @@ pipeline {
         script {
             withCredentials([file(credentialsId: 'kubernetes-cred', variable: 'KUBECONFIG_FILE')]) {
                 try {
-                sh '''
-                    export KUBECONFIG=$KUBECONFIG_FILE
-                    curl -LO https://github.com/argoproj/argo-rollouts/releases/latest/download/kubectl-argo-rollouts-linux-amd64
-                    chmod +x kubectl-argo-rollouts-linux-amd64
-                    mv kubectl-argo-rollouts-linux-amd64 /usr/local/bin/kubectl-argo-rollouts
-                    kubectl-argo-rollouts status custom-metrics-rollout -n monitoring --timeout 2m
-                    kubectl get pods -n $K8S_NAMESPACE
-                '''
+                    sh '''
+                        export KUBECONFIG=$KUBECONFIG_FILE
+                        curl -LO https://github.com/argoproj/argo-rollouts/releases/latest/download/kubectl-argo-rollouts-linux-amd64
+                        chmod +x kubectl-argo-rollouts-linux-amd64
+                        mkdir -p $WORKSPACE/bin
+                        mv kubectl-argo-rollouts-linux-amd64 $WORKSPACE/bin/kubectl-argo-rollouts
+                        export PATH=$WORKSPACE/bin:$PATH
+                        kubectl-argo-rollouts status custom-metrics-rollout -n monitoring --timeout 2m
+                        kubectl get pods -n $K8S_NAMESPACE
+                    '''
                 }
                 catch (Exception e) {
                     echo "Error connecting to the cluster: ${e.getMessage()}"
@@ -207,6 +209,7 @@ pipeline {
         failure { echo "⚠️ Could Not Verify rollout status. Please check via kubectl command" }
     }
 }
+
 
 
        stage("Load Testing") {
