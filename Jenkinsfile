@@ -158,6 +158,7 @@ pipeline {
                 ]) {
                     try {
                     sh """
+                        argocd logout ${ARGOCD_ADDRESS} || true
                         argocd login ${ARGOCD_ADDRESS} --username ${ARGO_USER} --password ${ARGO_PASS} --insecure
                         argocd app sync custommetrics --prune
                         argocd app wait custommetrics --sync --timeout 300
@@ -187,7 +188,10 @@ pipeline {
                 try {
                 sh '''
                     export KUBECONFIG=$KUBECONFIG_FILE
-                    kubectl argo rollouts status custom-metrics-rollout -n monitoring --timeout 2m
+                    curl -LO https://github.com/argoproj/argo-rollouts/releases/latest/download/kubectl-argo-rollouts-linux-amd64
+                    chmod +x kubectl-argo-rollouts-linux-amd64
+                    mv kubectl-argo-rollouts-linux-amd64 /usr/local/bin/kubectl-argo-rollouts
+                    kubectl-argo-rollouts status custom-metrics-rollout -n monitoring --timeout 2m
                     kubectl get pods -n $K8S_NAMESPACE
                 '''
                 }
@@ -206,29 +210,37 @@ pipeline {
 
 
        stage("Load Testing") {
-    agent {
-        docker { 
-            image "python:3.12"
-            args "-u root" 
-        }
-    }
     steps {
-        script {
-            def SERVICE_HOST = sh(script: 'kubectl get svc custom-metrics-service -n monitoring -o jsonpath="{.spec.clusterIP}"', returnStdout: true).trim()
+        catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
+            script {
+                withCredentials([file(credentialsId: 'kubernetes-cred', variable: 'KUBECONFIG_FILE')]) {
 
-            echo "Running load test against service DNS: ${SERVICE_HOST}"
-            sh """
-                pip install --no-cache-dir locust
-                locust -f locust.py --headless -u 100 -r 10 --host=http://${SERVICE_HOST}:80 --run-time 1m
-            """
+                    def SERVICE_HOST = sh(
+                        script: """
+                            export KUBECONFIG=${KUBECONFIG_FILE}
+                            kubectl get svc custom-metrics-service \
+                              -n ${K8S_NAMESPACE} \
+                              -o jsonpath='{.spec.clusterIP}'
+                        """,
+                        returnStdout: true
+                    ).trim()
+
+                    docker.image("python:3.12").inside("-u root") {
+                        sh """
+                            pip install --no-cache-dir locust
+                            locust -f locust.py \
+                              --headless \
+                              -u 100 \
+                              -r 10 \
+                              --host=http://${SERVICE_HOST}:80 \
+                              --run-time 1m
+                        """
+                    }
+                }
+            }
         }
-    }
-    post {
-        success { echo "✅ Load testing completed" }
-        failure { echo "⚠️ Load testing failed (non-blocking)" }
     }
 }
-
 
     }
 
