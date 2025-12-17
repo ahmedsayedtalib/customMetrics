@@ -194,7 +194,7 @@ pipeline {
                         mv kubectl-argo-rollouts-linux-amd64 $WORKSPACE/bin/kubectl-argo-rollouts
                         export PATH=$WORKSPACE/bin:$PATH
                         kubectl-argo-rollouts status custom-metrics-rollout -n monitoring --timeout 2m
-                        kubectl get pods -n $K8S_NAMESPACE
+                        kubectl -n monitoring get rollouts.argoproj.io
                     '''
                 }
                 catch (Exception e) {
