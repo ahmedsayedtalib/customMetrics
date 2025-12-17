@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: jenkins
+  namespace: default
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: jenkins-clusterrole
+rules:
+- apiGroups: [""]
+  resources:
+    - pods
+    - pods/log
+    - services
+    - configmaps
+    - secrets
+    - events
+    - namespaces
+  verbs: ["*"]
+- apiGroups: ["apps", "batch", "networking.k8s.io", "rbac.authorization.k8s.io", "argoproj.io"]
+  resources:
+    - "*"
+  verbs: ["*"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: jenkins-clusterrolebinding
+subjects:
+- kind: ServiceAccount
+  name: jenkins
+  namespace: default
+roleRef:
+  kind: ClusterRole
+  name: jenkins-clusterrole
+  apiGroup: rbac.authorization.k8s.io
