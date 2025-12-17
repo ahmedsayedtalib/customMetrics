@@ -184,7 +184,7 @@ pipeline {
         stage("Verify Deployment") {
     steps {
         script {
-            withCredentials([file(credentialsId: 'kubernetes-cred', variable: 'KUBECONFIG_FILE')]) {
+            withCredentials([file(credentialsId: KUBERNETES_CRED, variable: 'KUBECONFIG_FILE')]) {
                 try {
                     sh '''
                         export KUBECONFIG=$KUBECONFIG_FILE
