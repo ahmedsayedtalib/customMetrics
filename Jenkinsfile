@@ -218,19 +218,6 @@ pipeline {
             script {
                 withCredentials([file(credentialsId: KUBERNETES_CRED, variable: 'KUBECONFIG_FILE')]) {
 
-                    def SERVICE_HOST = sh(
-                        script: """
-                            minikube ip 
-                        """,
-                        returnStdout: true
-                    ).trim()
-                    def NODE_PORT = sh(script:'''
-                    kubectl -n monitoring get svc custom-metrics-service \
-                     -o jsonpath="{.spec.ports[0].nodePort}"
-                    ''',
-                    returnStdout: true
-                    ).trim()
-
                         sh """
                             pip install --no-cache-dir locust
                             locust -f locust.py \
