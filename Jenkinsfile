@@ -237,7 +237,7 @@ pipeline {
                               --headless \
                               -u 100 \
                               -r 10 \
-                              --host=http://${SERVICE_HOST}:${NODE_PORT} \
+                              --host=http://custom-metrics.local \
                               --run-time 1m
                         """
                 }

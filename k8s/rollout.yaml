@@ -3,10 +3,17 @@ kind: Rollout
 metadata:
   name: custom-metrics-rollout
   namespace: monitoring
+  labels:
+    app: custom-metrics
 spec:
   replicas: 2
   strategy:
     canary:
+      canaryService: custom-metrics-service-canary
+      stableService: custom-metrics-service
+      trafficRouting:
+        nginx:
+          stableIngress: custom-metrics-ingress
       steps:
         - setWeight: 10
         - pause: { duration: 20s }
