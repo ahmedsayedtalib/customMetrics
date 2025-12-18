@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-fe0dyfpw+3$)m42ybr_3acy62w4h)*t8qu6!kjx7$z7)!w)is&
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['custom-metrics.local', 'localhost', '127.0.0.1', '192.168.103.2']
 
 
 # Application definition
