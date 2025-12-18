@@ -30,6 +30,6 @@ spec:
     spec:
       containers:
         - name: custom-metrics
-          image: ahmedsayedtalib/custommetrics:4
+          image: ahmedsayedtalib/custommetrics:5
           ports:
             - containerPort: 8000
