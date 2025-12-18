@@ -219,13 +219,14 @@ pipeline {
                 withCredentials([file(credentialsId: KUBERNETES_CRED, variable: 'KUBECONFIG_FILE')]) {
 
                         sh """
-                            pip install --no-cache-dir locust
-                            locust -f locust.py \
-                              --headless \
-                              -u 100 \
-                              -r 10 \
-                              --host=http://custom-metrics.local \
-                              --run-time 1m
+                            python3 -m venv venv
+                            ./venv/bin/pip install --no-cache-dir locust
+                            ./venv/bin/locust -f locust.py \
+                            --headless \
+                            -u 100 \
+                            -r 10 \
+                            --host=http://custom-metrics.local \
+                            --run-time 1m
                         """
                 }
             }
