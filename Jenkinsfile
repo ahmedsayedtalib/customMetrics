@@ -193,7 +193,7 @@ pipeline {
                         mkdir -p bin
                         mv kubectl-argo-rollouts-linux-amd64 bin/kubectl-argo-rollouts
                         export PATH=bin:$PATH
-                        kubectl-argo-rollouts status custom-metrics-rollout -n monitoring --timeout 2m
+                        kubectl-argo-rollouts status custom-metrics-rollout -n monitoring --timeout 10m
                         kubectl -n monitoring get rollouts.argoproj.io
                     '''
                 }
