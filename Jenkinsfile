@@ -216,29 +216,30 @@ pipeline {
     steps {
         catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
             script {
-                withCredentials([file(credentialsId: 'kubernetes-cred', variable: 'KUBECONFIG_FILE')]) {
+                withCredentials([file(credentialsId: KUBERNETES_CRED, variable: 'KUBECONFIG_FILE')]) {
 
                     def SERVICE_HOST = sh(
                         script: """
-                            export KUBECONFIG=${KUBECONFIG_FILE}
-                            kubectl get svc custom-metrics-service \
-                              -n ${K8S_NAMESPACE} \
-                              -o jsonpath='{.spec.clusterIP}'
+                            minikube ip 
                         """,
                         returnStdout: true
                     ).trim()
+                    def NODE_PORT = sh(script:'''
+                    kubectl -n monitoring get svc custom-metrics-service \
+                     -o jsonpath="{.spec.ports[0].nodePort}"
+                    ''',
+                    returnStdout: true
+                    ).trim()
 
-                    docker.image("python:3.12").inside("-u root") {
                         sh """
                             pip install --no-cache-dir locust
                             locust -f locust.py \
                               --headless \
                               -u 100 \
                               -r 10 \
-                              --host=http://${SERVICE_HOST}:80 \
+                              --host=http://${SERVICE_HOST}:${NODE_PORT} \
                               --run-time 1m
                         """
-                    }
                 }
             }
         }
