@@ -190,9 +190,9 @@ pipeline {
                         export KUBECONFIG=$KUBECONFIG_FILE
                         curl -LO https://github.com/argoproj/argo-rollouts/releases/latest/download/kubectl-argo-rollouts-linux-amd64
                         chmod +x kubectl-argo-rollouts-linux-amd64
-                        mkdir -p $WORKSPACE/bin
-                        mv kubectl-argo-rollouts-linux-amd64 $WORKSPACE/bin/kubectl-argo-rollouts
-                        export PATH=$WORKSPACE/bin:$PATH
+                        mkdir -p bin
+                        mv kubectl-argo-rollouts-linux-amd64 bin/kubectl-argo-rollouts
+                        export PATH=bin:$PATH
                         kubectl-argo-rollouts status custom-metrics-rollout -n monitoring --timeout 2m
                         kubectl -n monitoring get rollouts.argoproj.io
                     '''

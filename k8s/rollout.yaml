@@ -2,6 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
   name: custom-metrics-rollout
+  namespace: monitoring
 spec:
   replicas: 2
   strategy:
